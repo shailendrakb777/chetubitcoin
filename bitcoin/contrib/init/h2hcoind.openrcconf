@@ -1,0 +1,33 @@
+# /etc/conf.d/h2hcoind: config file for /etc/init.d/h2hcoind
+
+# Config file location
+#H2HCOIND_CONFIGFILE="/etc/h2hcoin/h2hcoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $H2HCOIND_USER)
+#H2HCOIND_PIDDIR="/var/run/h2hcoind"
+
+# What filename to give the pidfile
+#H2HCOIND_PIDFILE="${H2HCOIND_PIDDIR}/h2hcoind.pid"
+
+# Where to write h2hcoind data (be mindful that the blockchain is large)
+#H2HCOIND_DATADIR="/var/lib/h2hcoind"
+
+# User and group to own h2hcoind process
+#H2HCOIND_USER="h2hcoin"
+#H2HCOIND_GROUP="h2hcoin"
+
+# Path to h2hcoind executable
+#H2HCOIND_BIN="/usr/bin/h2hcoind"
+
+# Nice value to run h2hcoind under
+#H2HCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#H2HCOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for h2hcoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+H2HCOIND_SIGTERM_TIMEOUT=60

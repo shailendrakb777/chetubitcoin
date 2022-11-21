@@ -1,0 +1,92 @@
+#!/sbin/openrc-run
+
+# backward compatibility for existing gentoo layout 
+#
+if [ -d "/var/lib/h2hcoin/.h2hcoin" ]; then
+	H2HCOIND_DEFAULT_DATADIR="/var/lib/h2hcoin/.h2hcoin"
+else
+	H2HCOIND_DEFAULT_DATADIR="/var/lib/h2hcoind"
+fi
+
+H2HCOIND_CONFIGFILE=${H2HCOIND_CONFIGFILE:-/etc/h2hcoin/h2hcoin.conf}
+H2HCOIND_PIDDIR=${H2HCOIND_PIDDIR:-/var/run/h2hcoind}
+H2HCOIND_PIDFILE=${H2HCOIND_PIDFILE:-${H2HCOIND_PIDDIR}/h2hcoind.pid}
+H2HCOIND_DATADIR=${H2HCOIND_DATADIR:-${H2HCOIND_DEFAULT_DATADIR}}
+H2HCOIND_USER=${H2HCOIND_USER:-${H2HCOIN_USER:-h2hcoin}}
+H2HCOIND_GROUP=${H2HCOIND_GROUP:-h2hcoin}
+H2HCOIND_BIN=${H2HCOIND_BIN:-/usr/bin/h2hcoind}
+H2HCOIND_NICE=${H2HCOIND_NICE:-${NICELEVEL:-0}}
+H2HCOIND_OPTS="${H2HCOIND_OPTS:-${H2HCOIN_OPTS}}"
+
+name="H2hcoin Core Daemon"
+description="H2hcoin cryptocurrency P2P network daemon"
+
+command="/usr/bin/h2hcoind"
+command_args="-pid=\"${H2HCOIND_PIDFILE}\" \
+		-conf=\"${H2HCOIND_CONFIGFILE}\" \
+		-datadir=\"${H2HCOIND_DATADIR}\" \
+		-daemon \
+		${H2HCOIND_OPTS}"
+
+required_files="${H2HCOIND_CONFIGFILE}"
+start_stop_daemon_args="-u ${H2HCOIND_USER} \
+			-N ${H2HCOIND_NICE} -w 2000"
+pidfile="${H2HCOIND_PIDFILE}"
+
+# The retry schedule to use when stopping the daemon. Could be either
+# a timeout in seconds or multiple signal/timeout pairs (like
+# "SIGKILL/180 SIGTERM/300")
+retry="${H2HCOIND_SIGTERM_TIMEOUT}"
+
+depend() {
+	need localmount net
+}
+
+# verify
+# 1) that the datadir exists and is writable (or create it)
+# 2) that a directory for the pid exists and is writable
+# 3) ownership and permissions on the config file
+start_pre() {
+	checkpath \
+	-d \
+	--mode 0750 \
+	--owner "${H2HCOIND_USER}:${H2HCOIND_GROUP}" \
+	"${H2HCOIND_DATADIR}"
+
+	checkpath \
+	-d \
+	--mode 0755 \
+	--owner "${H2HCOIND_USER}:${H2HCOIND_GROUP}" \
+	"${H2HCOIND_PIDDIR}"
+
+	checkpath -f \
+	-o ${H2HCOIND_USER}:${H2HCOIND_GROUP} \
+	-m 0660 \
+	${H2HCOIND_CONFIGFILE}
+
+	checkconfig || return 1
+}
+
+checkconfig()
+{
+	if ! grep -qs '^rpcpassword=' "${H2HCOIND_CONFIGFILE}" ; then
+		eerror ""
+		eerror "ERROR: You must set a secure rpcpassword to run h2hcoind."
+		eerror "The setting must appear in ${H2HCOIND_CONFIGFILE}"
+		eerror ""
+		eerror "This password is security critical to securing wallets "
+		eerror "and must not be the same as the rpcuser setting."
+		eerror "You can generate a suitable random password using the following "
+		eerror "command from the shell:"
+		eerror ""
+		eerror "bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'"
+		eerror ""
+		eerror "It is recommended that you also set alertnotify so you are "
+		eerror "notified of problems:"
+		eerror ""
+		eerror "ie: alertnotify=echo %%s | mail -s \"H2hcoin Alert\"" \
+			"admin@foo.com"
+		eerror ""
+		return 1
+	fi
+}

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+#  h2hcoind The h2hcoin core server.
+#
+#
+# chkconfig: 345 80 20
+# description: h2hcoind
+# processname: h2hcoind
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/h2hcoind, see below
+if [ -f /etc/sysconfig/h2hcoind ]; then
+        . /etc/sysconfig/h2hcoind
+fi
+
+RETVAL=0
+
+prog=h2hcoind
+# you can override the lockfile via H2HCOIND_LOCKFILE in /etc/sysconfig/h2hcoind
+lockfile=${H2HCOIND_LOCKFILE-/var/lock/subsys/h2hcoind}
+
+# h2hcoind defaults to /usr/bin/h2hcoind, override with H2HCOIND_BIN
+h2hcoind=${H2HCOIND_BIN-/usr/bin/h2hcoind}
+
+# h2hcoind opts default to -disablewallet, override with H2HCOIND_OPTS
+h2hcoind_opts=${H2HCOIND_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $h2hcoind $h2hcoind_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
