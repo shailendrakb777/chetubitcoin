@@ -116,6 +116,7 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
+        LogPrintf("1111111111111111111111 ");
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
@@ -123,28 +124,34 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
+        LogPrintf("2222222222222222222222222222 ");
         while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
             --nMaxTries;
         }
+        LogPrintf("333333333333333333333333 ");
         if (nMaxTries == 0) {
             break;
         }
+        LogPrintf("44444444444444444444 ");
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
+        LogPrintf("555555555555555555555 ");
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
+        LogPrintf("6666666666666666 ");
         blockHashes.push_back(pblock->GetHash().GetHex());
-
+        LogPrintf("777777777777777777777777 "); 
         //mark script as important because it was used at least for one coinbase output if the script came from the wallet
         if (keepScript)
         {
             coinbaseScript->KeepScript();
         }
     }
+    LogPrintf(" 8888888888888888888");
     return blockHashes;
 }
 
@@ -448,8 +455,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
 
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");
+    /*if (IsInitialBlockDownload())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, PACKAGE_NAME " is in initial sync and waiting for blocks...");*/
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -501,9 +508,9 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
     const struct VBDeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     // GBT must be called with 'segwit' set in the rules
-    if (setClientRules.count(segwit_info.name) != 1) {
+    /*if (setClientRules.count(segwit_info.name) != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
-    }
+    }*/
 
     // Update block
     static CBlockIndex* pindexPrev;
@@ -523,25 +530,27 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
         pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
+        //LogPrintf("AAAAAAAAAAA1111111111111111111111 ");
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
     }
+     //LogPrintf("BBBBBBBBBB1111111111111111111111 540s");
     assert(pindexPrev);
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
     const Consensus::Params& consensusParams = Params().GetConsensus();
-
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 544");
     // Update nTime
     UpdateTime(pblock, consensusParams, pindexPrev);
     pblock->nNonce = 0;
-
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 548");
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = (ThresholdState::ACTIVE != VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache));
 
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
-
+   // LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 553");
     UniValue transactions(UniValue::VARR);
     std::map<uint256, int64_t> setTxIndex;
     int i = 0;
@@ -579,12 +588,12 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
         transactions.push_back(entry);
     }
-
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 591");
     UniValue aux(UniValue::VOBJ);
     aux.pushKV("flags", HexStr(COINBASE_FLAGS.begin(), COINBASE_FLAGS.end()));
 
     arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
-
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 596");
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
     aMutable.push_back("transactions");
@@ -592,7 +601,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("capabilities", aCaps);
-
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 604");
     UniValue aRules(UniValue::VARR);
     UniValue vbavailable(UniValue::VOBJ);
     for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
@@ -635,11 +644,12 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             }
         }
     }
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 647");
     result.pushKV("version", pblock->nVersion);
     result.pushKV("rules", aRules);
     result.pushKV("vbavailable", vbavailable);
     result.pushKV("vbrequired", int(0));
-
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111  651");
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
         // Because BIP 34 changed how the generation transaction is serialized, we can only use version/force back to v2 blocks
@@ -647,7 +657,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         // Note that this can probably also be removed entirely after the first BIP9 non-force deployment (ie, probably segwit) gets activated
         aMutable.push_back("version/force");
     }
-
+   // LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 660");
     result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
     result.pushKV("transactions", transactions);
     result.pushKV("coinbaseaux", aux);
@@ -657,6 +667,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
     result.pushKV("mutable", aMutable);
     result.pushKV("noncerange", "00000000ffffffff");
+    //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 670");
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
     if (fPreSegWit) {
@@ -673,11 +684,12 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("curtime", pblock->GetBlockTime());
     result.pushKV("bits", strprintf("%08x", pblock->nBits));
     result.pushKV("height", (int64_t)(pindexPrev->nHeight+1));
-
+   // LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 687");
     if (!pblocktemplate->vchCoinbaseCommitment.empty()) {
+        //LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 ");
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
-
+   // LogPrintf("BBBBBBBBBBBBBBB1111111111111111111111 692");
     return result;
 }
 

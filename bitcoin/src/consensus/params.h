@@ -41,6 +41,7 @@ struct BIP9Deployment {
      *  process (which takes at least 3 BIP9 intervals). Only tests that specifically test the
      *  behaviour during activation cannot use this. */
     static constexpr int64_t ALWAYS_ACTIVE = -1;
+    static constexpr int64_t NEVER_ACTIVE = -2;
 };
 
 /**

@@ -1156,7 +1156,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
+    CAmount nSubsidy = 100 * COIN;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
@@ -2029,7 +2029,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-    
+    LogPrintf("block reward at line 2032 is %lld", blockReward);
     if (block.vtx[0]->GetValueOut() > blockReward)
         return state.DoS(100,
                          error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
@@ -2042,18 +2042,23 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1, MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
 
     if (fJustCheck)
-        return true;
+    {
+        LogPrintf("Inside fJustCheck line 2046 ");
+        //return true;
+    }
 
     if (block.GetHash() != chainparams.GetConsensus().hashGenesisBlock) {
     if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
+        {LogPrintf("Inside *********** line 2052 ");
         return false;
+    }
 }
 
     if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         setDirtyBlockIndex.insert(pindex);
     }
-
+    LogPrintf("Inside *********** line 2060 ");
     assert(pindex->phashBlock);
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
@@ -2063,7 +2068,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
     LogPrint(BCLog::BENCH, "    - Callbacks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime6 - nTime5), nTimeCallbacks * MICRO, nTimeCallbacks * MILLI / nBlocksTotal);
-
+    LogPrintf("Inside *********** line 2070 ");
     return true;
 }
 
@@ -3265,10 +3270,10 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
 
     // Start enforcing BIP113 (Median Time Past) using versionbits logic.
     int nLockTimeFlags = 0;
-    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == ThresholdState::ACTIVE) {
+    /*if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CSV, versionbitscache) == ThresholdState::ACTIVE) {
         assert(pindexPrev != nullptr);
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
-    }
+    }*/
 
     int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
                               ? pindexPrev->GetMedianTimePast()
@@ -3282,14 +3287,14 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     }
 
     // Enforce rule that the coinbase starts with serialized block height
-    if (nHeight >= consensusParams.BIP34Height)
+    /*if (nHeight >= consensusParams.BIP34Height)
     {
         CScript expect = CScript() << nHeight;
         if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
         }
-    }
+    }*/
 
     // Validation for witness commitments.
     // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
@@ -3545,7 +3550,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
 {
     AssertLockNotHeld(cs_main);
-
+     LogPrintf("ProcessNewBlock  *******************************");
     {
         CBlockIndex *pindex = nullptr;
         if (fNewBlock) *fNewBlock = false;
@@ -3558,16 +3563,18 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         // Ensure that CheckBlock() passes before calling AcceptBlock, as
         // belt-and-suspenders.
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+        LogPrintf(" *******************************");
         if (ret) {
             // Store to disk
             ret = g_chainstate.AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
         }
+        LogPrintf(" kkkkkkkkkkkkkkkkkkkkk");
         if (!ret) {
             GetMainSignals().BlockChecked(*pblock, state);
             return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
         }
     }
-
+    LogPrintf("NotifyHeaderTip  *******************************");
     NotifyHeaderTip();
 
     CValidationState state; // Only used to report errors, not invalidity - ignore it
@@ -3580,6 +3587,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     AssertLockHeld(cs_main);
+    //LogPrintf("TestBlockValidity(): AssertLockHeld added new block hash ");
     assert(pindexPrev && pindexPrev == chainActive.Tip());
     CCoinsViewCache viewNew(pcoinsTip.get());
     uint256 block_hash(block.GetHash());
@@ -3596,9 +3604,12 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     if (!g_chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
+    {
+         LogPrintf("TestBlockValidity(): g_chainstate.ConnectBlock ");
         return false;
+    }
     assert(state.IsValid());
-
+    LogPrintf("TestBlockValidity(): assert(state.IsValid()) added new block hash ");
     return true;
 }
 
