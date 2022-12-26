@@ -149,7 +149,7 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
     vErrorsRet.push_back(entry);
 }
 
-// TODO(https://github.com/h2hcoin/h2hcoin/pull/10973#discussion_r267084237):
+// TODO(https://github.com/h2hcoin/h2hcoin/pull/10973#discussion_r267093357):
 // The dependency on interfaces::Chain should be removed, so
 // signrawtransactionwithkey doesn't need access to a Chain instance.
 UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType)

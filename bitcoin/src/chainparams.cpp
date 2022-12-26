@@ -105,7 +105,7 @@ public:
         pchMessageStart[1] = 0xcd;
         pchMessageStart[2] = 0xd7;
         pchMessageStart[3] = 0xae;
-        nDefaultPort = 8433;
+        nDefaultPort = 9334;
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 3;
@@ -128,7 +128,8 @@ public:
         vSeeds.emplace_back("seed.btc.petertodd.org"); // Peter Todd, only supports x1, x5, x9, and xd
         vSeeds.emplace_back("seed.h2hcoin.sprovoost.nl"); // Sjors Provoost
         vSeeds.emplace_back("dnsseed.emzy.de"); // Stephan Oeste*/
-        vSeeds.emplace_back("http://192.168.0.8:8432");
+        vSeeds.emplace_back("172.16.74.65");
+        vSeeds.emplace_back("172.16.73.170");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,45);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,48);;
@@ -205,12 +206,12 @@ public:
         pchMessageStart[1] = 0xce;
         pchMessageStart[2] = 0xeb;
         pchMessageStart[3] = 0xad;
-        nDefaultPort = 18433;
+        nDefaultPort = 19334;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-         genesis = CreateGenesisBlock(1671545778, 740286460, 0x1d00ffff, 1, 10000000000);
+        genesis = CreateGenesisBlock(1671545778, 740286460, 0x1d00ffff, 1, 10000000000);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0000000017847ea805d0e74f38fb623affab9c2488acfb85f69b0c98a78190d4"));
         assert(genesis.hashMerkleRoot == uint256S("69a47de1c5bea3c49a7707712f665ecd920241a70c0d4f4a22abb215830aba7e"));

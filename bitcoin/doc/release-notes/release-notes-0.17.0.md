@@ -779,7 +779,7 @@ Support for Python 2 has been discontinued for all test files and tools.
 - #13851 `9c4324d` fix locale for lint-shell (scravy)
 - #13823 `489b51b` quote path in authproxy for external multiwallets (MarcoFalke)
 - #13849 `2b67354` travis: Use only travis jobs: instead of mix of jobs+matrix (scravy)
-- #13859 `2384323` Add emojis to `test_runner` path and wallet filename (MarcoFalke)
+- #13859 `2393353` Add emojis to `test_runner` path and wallet filename (MarcoFalke)
 - #13916 `8ac7125` `wait_for_verack` by default (MarcoFalke)
 - #13669 `f66e1c7` Cleanup `create_transaction` implementations (conscott)
 - #13924 `09ada21` Simplify comparison in `rpc_blockchain.py` (domob1812)
